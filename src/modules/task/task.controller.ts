@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Put } from '@nestjs/common';
 import { TaskService } from './task.service';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto, UpdateTaskOrderDto } from './dto/update-task.dto';
+import { AssignTaskToAnotherProjectDto, UpdateTaskDto, UpdateTaskOrderDto } from './dto/update-task.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { LocalAuthGuard } from '../auth/guards/local-auth.guard';
 
@@ -15,9 +15,10 @@ export class TaskController {
     return this.taskService.create(createTaskDto, req.user.id);
   }
 
-  @Get('/columns/:id')
-  findByColumnId(@Param('id') id: string) {
-    return this.taskService.findByColumnId(+id);
+
+  @Get('/project/:id')
+  findByProjectId(@Param('id') id: string) {
+    return this.taskService.findByProjectId(+id);
   }
 
   @Get(':id')
@@ -35,13 +36,14 @@ export class TaskController {
     return this.taskService.update(+id, updateTaskDto);
   }
 
-  @Patch()
-  updateOrder(@Body() updatedTasks: UpdateTaskOrderDto) {
-    return this.taskService.updateOrder(updatedTasks);
+  @Post('/assign')
+  assignTaskToAnotherProject(@Body() assignTaskDto: AssignTaskToAnotherProjectDto) {
+    return this.taskService.assignTaskToAnotherProject(assignTaskDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.taskService.remove(+id);
-  }
+
+  //@Delete(':id')
+  //remove(@Param('id') id: string) {
+  //  return this.taskService.remove(+id);
+  //}
 }

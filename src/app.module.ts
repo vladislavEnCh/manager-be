@@ -14,6 +14,11 @@ import { Task } from './modules/task/entities/task.entity';
 import { WorkspaceColumn } from './modules/column/entities/column.entity';
 import { ProjectModule } from './modules/project/project.module';
 import { Project } from './modules/project/entities/project.entity';
+//import { ProjectTaskModule } from './modules/project-task/project-task.module';
+import { StatusModule } from './modules/status/status.module';
+import { StatusTaskModule } from './modules/status-task/status-task.module';
+import { Status } from './modules/status/entities/status.entity';
+import { StatusTask } from './modules/status-task/entities/status-task.entity';
 
 @Module({
   imports: [
@@ -30,7 +35,7 @@ import { Project } from './modules/project/entities/project.entity';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [User, Workspace, Task, WorkspaceColumn, Project],
+        entities: [User, Workspace, Task, WorkspaceColumn, Project, Status, StatusTask],
         synchronize: true,
         //migrations: ['../migration/**'],
       }),
@@ -42,6 +47,9 @@ import { Project } from './modules/project/entities/project.entity';
     TaskModule,
     ColumnModule,
     ProjectModule,
+    //ProjectTaskModule,
+    StatusModule,
+    StatusTaskModule,
   ],
   controllers: [AppController],
   providers: [AppService],

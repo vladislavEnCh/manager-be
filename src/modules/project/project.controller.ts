@@ -18,8 +18,8 @@ export class ProjectController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(+id);
+  findByWorkspace(@Param('id') id: string) {
+    return this.projectService.findByWorkspace(+id);
   }
 
   @Patch(':id')

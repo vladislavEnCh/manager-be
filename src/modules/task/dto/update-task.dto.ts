@@ -27,3 +27,10 @@ export class UpdateTaskOrderDto {
 
   newOrder: Task[];
 }
+
+export class AssignTaskToAnotherProjectDto {
+  taskId: number;
+
+  projectId: number;
+}
+

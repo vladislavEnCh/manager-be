@@ -4,153 +4,177 @@ import { Repository } from 'typeorm';
 import { UserService } from '../user/user.service';
 import { Workspace } from '../workspace/entities/workspace.entity';
 import { CreateTaskDto } from './dto/create-task.dto';
-import { UpdateTaskDto, UpdateTaskOrderDto } from './dto/update-task.dto';
+import {
+  AssignTaskToAnotherProjectDto,
+  UpdateTaskDto,
+  UpdateTaskOrderDto,
+} from './dto/update-task.dto';
 import { Task } from './entities/task.entity';
 import { WorkspaceColumn } from '../column/entities/column.entity';
+import { StatusTask } from '../status-task/entities/status-task.entity';
+import { Status } from '../status/entities/status.entity';
+import { Project } from '../project/entities/project.entity';
 
 @Injectable()
 export class TaskService {
   constructor(
     @InjectRepository(Task)
     private readonly tasksRepository: Repository<Task>,
-    @InjectRepository(Workspace)
-    private readonly workspaceRepository: Repository<Workspace>,
 
-    @InjectRepository(WorkspaceColumn)
-    private readonly columnRepository: Repository<WorkspaceColumn>,
-    private userService: UserService,
+    //@InjectRepository(Workspace)
+    //private readonly workspaceRepository: Repository<Workspace>,
+
+    //@InjectRepository(WorkspaceColumn)
+    //private readonly columnRepository: Repository<WorkspaceColumn>,
+
+    @InjectRepository(StatusTask)
+    private readonly statusTaskRepository: Repository<StatusTask>,
+
+    @InjectRepository(Project)
+    private readonly projectRepository: Repository<Project>,
+
+    @InjectRepository(Status)
+    private readonly statusRepository: Repository<Status>,
+
+    //private userService: UserService,
   ) {}
 
   async create(createTaskDto: CreateTaskDto, userId: number) {
-    let taskCount;
+    let statusTaskCount;
 
+    const project = await this.projectRepository.findOne({
+      where: {
+        id: createTaskDto.projectId,
+      },
+    });
 
     const newTask: any = {
-      workspace: {
-        id: createTaskDto.workspaceId,
-      },
       reporter: {
         id: userId,
       },
       name: 'New Task',
+      projects: [project],
     };
 
-    if (createTaskDto.columnId) {
-      newTask.column = {
-        id: createTaskDto.columnId,
-      };
+    const task = await this.tasksRepository.save(newTask);
+    const status = await this.statusRepository.findOne({
+      where: {
+        id: createTaskDto.statusId,
+      },
+    });
+    const newStatusTask: any = {
+      task,
+      status,
+      projects: [project],
+    };
 
-      taskCount = await this.tasksRepository.count({
-        where: {
-          column: {
-            id: createTaskDto.columnId,
-          },
+    statusTaskCount = await this.statusTaskRepository.count({
+      where: {
+        status: {
+          id: createTaskDto.statusId,
         },
-      });
-      newTask.position = taskCount > 0 ? taskCount : 0;
-    }
-    return await this.tasksRepository.save(newTask);
+      },
+    });
+
+    newStatusTask.position = statusTaskCount > 0 ? statusTaskCount : 0;
+    const statusTask = await this.statusTaskRepository.save(newStatusTask);
+    return statusTask;
   }
 
   async findAll(id: number) {
-    return await this.tasksRepository.find({
+    //return await this.tasksRepository.find({
+    //  where: {
+    //    workspace: {
+    //      id,
+    //    },
+    //  },
+    //  select: {
+    //    column: {
+    //      id: true,
+    //    },
+    //  },
+    //  relations: {
+    //    column: true,
+    //  },
+    //  order: { position: 'ASC' },
+    //});
+  }
+
+  async findByProjectId(id: number) {
+    //console.log(id)
+    return await this.statusTaskRepository.find({
       where: {
-        workspace: {
+        projects: {
           id,
         },
       },
-      select: {
-        column: {
-          id: true,
-        },
-      },
       relations: {
-        column: true,
+        task: true,
+        status: true,
       },
       order: { position: 'ASC' },
     });
   }
 
-  async findByColumnId(id: number) {
-    return await this.tasksRepository.find({
-      where: {
-        column: {
-          id,
-        },
-      },
-    });
-  }
-
   async findOne(id: number) {
-    return await this.tasksRepository.findOne({
+    const task = await this.tasksRepository.findOne({
       where: {
         id,
       },
-      select: {
-        column: {
-          id: true,
-          name: true,
-        },
-      },
       relations: {
-        column: true,
+        statusTask: {
+          status: true,
+          projects: true,
+        },
         reporter: true,
       },
     });
+    return task;
   }
 
   async update(id: number, updateTaskDto: UpdateTaskDto) {
     if (!updateTaskDto.columnId) {
       return this.tasksRepository.update(id, updateTaskDto);
     }
+  }
 
-    const task: any = await this.tasksRepository.findOne({
+  async assignTaskToAnotherProject(
+    updateTaskDto: AssignTaskToAnotherProjectDto,
+  ) {
+    let statusTaskCount;
+    const project = await this.projectRepository.findOne({
       where: {
-        id,
+        id: updateTaskDto.projectId,
       },
       relations: {
-        column: true,
+        statuses: true,
+      },
+    });
+
+    const task = await this.tasksRepository.findOne({
+      where: {
+        id: updateTaskDto.taskId,
+      },
+    });
+
+    const newStatusTask: any = {
+      task,
+      status: project.statuses[0],
+      projects: [project],
+    };
+
+    statusTaskCount = await this.statusTaskRepository.count({
+      where: {
+        status: {
+          id: project.statuses[0].id,
+        },
       },
     });
 
 
-    if (!task) {
-      throw new Error(`Task with ID ${id} not found`);
-    }
-    const newColumn = await this.columnRepository.findOne({
-      where: { id: updateTaskDto.columnId },
-    });
+    newStatusTask.position = statusTaskCount > 0 ? statusTaskCount : 0;
 
-    if (!newColumn) {
-      throw new Error(`Column with ID ${updateTaskDto.columnId} not found`);
-    }
-
-    task.column = newColumn;
-    return await this.tasksRepository.save(task);
-  }
-
-
-  async updateOrder(updatedTasksOrder: any) {
-    await this.tasksRepository.save(updatedTasksOrder);
-
-    for (const key in updatedTasksOrder) {
-      const task = updatedTasksOrder[key];
-      const taskById = await this.findOne(task.id);
-
-      await this.tasksRepository.save({
-        ...taskById,
-        position: Number(key),
-      });
-    }
-    //  await this.tasksRepository.save({
-    //    ...taskById,
-    //    position: Number(key),
-    //  });
-    //}
-  }
-
-  async remove(id: number) {
-    await this.tasksRepository.delete(id);
-    return true;
+    const statusTask = await this.statusTaskRepository.save(newStatusTask);
+    return statusTask;
   }
 }

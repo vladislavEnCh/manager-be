@@ -20,9 +20,9 @@ export class WorkspaceColumn {
   @Column()
   name: string;
 
-  @OneToMany(() => Task, (task) => task.workspace, { cascade: true })
-  @JoinTable()
-  tasks: Task[];
+  //@OneToMany(() => Task, (task) => task.workspace, { cascade: true })
+  //@JoinTable()
+  //tasks: Task[];
 
   @Column()
   position: number;

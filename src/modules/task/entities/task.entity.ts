@@ -3,17 +3,20 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
+  OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 import { Workspace } from '../../workspace/entities/workspace.entity';
 import { ITypes, PriorityType } from '../dto/create-task.dto';
-import { WorkspaceColumn } from '../../column/entities/column.entity';
+//import { WorkspaceColumn } from '../../column/entities/column.entity';
 import { Project } from '../../project/entities/project.entity';
+import { StatusTask } from '../../status-task/entities/status-task.entity';
 
 @Entity()
 export class Task {
@@ -29,10 +32,22 @@ export class Task {
   @ManyToMany(() => User, (user) => user.assignedTasks, { nullable: true })
   assignee: User[];
 
-  @ManyToMany(() => Project, (project) => project.projectsTasks, {
-    nullable: true,
-  })
+  @ManyToMany(() => Project, (project) => project.tasks)
+  @JoinTable()
   projects: Project[];
+
+  @OneToMany(() => StatusTask, (statusTask) => statusTask.task, {nullable: true, cascade: true})
+  statusTask: StatusTask[];
+
+  //@ManyToMany(() => ProjectTask, (project) => project.tasks, {
+  //  nullable: true,
+  //})
+  //projectsTasks: ProjectTask[];
+
+  //@ManyToMany(() => Project, (project) => project.projectsTasks, {
+  //  nullable: true,
+  //})
+  //projects: Project[];
 
   @Column({ type: 'enum', enum: PriorityType, default: PriorityType.HIGHT })
   priority: string;
@@ -49,28 +64,27 @@ export class Task {
   @Column({ nullable: true })
   blockedById: number;
 
-  @OneToMany(() => Task, task => task.id)
+  @OneToMany(() => Task, (task) => task.id)
   childrenTasks: Task[];
 
-  @Column({ nullable: true })
-  position: number;
+  //@Column({ nullable: true })
+  //position: number;
 
   @ManyToOne(() => User, (user) => user.reportedTask)
   reporter: User;
 
-  @ManyToOne(() => Workspace, (workspace) => workspace.id)
-  workspace: Workspace;
+  //@ManyToOne(() => Workspace, (workspace) => workspace.id)
+  //workspace: Workspace;
 
-  @ManyToOne(() => WorkspaceColumn, (workspaceColumn) => workspaceColumn.id)
-  @JoinColumn({ name: 'column_id' })
-  column: WorkspaceColumn;
+  //@ManyToOne(() => WorkspaceColumn, (workspaceColumn) => workspaceColumn.id)
+  //@JoinColumn({ name: 'column_id' })
+  //column: WorkspaceColumn;
 
-  column_id: number;
+  //column_id: number;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
-  
 }

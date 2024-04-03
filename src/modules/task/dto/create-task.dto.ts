@@ -1,7 +1,8 @@
 export class CreateTaskDto {
-  workspaceId: number;
+  projectId: number;
 
-  columnId: number;
+  statusId: number;
+
 }
 
 export enum PriorityType {

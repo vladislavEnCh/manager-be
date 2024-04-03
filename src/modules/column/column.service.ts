@@ -5,6 +5,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { WorkspaceColumn } from './entities/column.entity';
 import { Repository } from 'typeorm';
 import { Workspace } from '../workspace/entities/workspace.entity';
+import { StatusTask } from '../status-task/entities/status-task.entity';
+import { Status } from '../status/entities/status.entity';
 
 @Injectable()
 export class ColumnService {
@@ -13,6 +15,11 @@ export class ColumnService {
     private readonly workspaceColumnRepository: Repository<WorkspaceColumn>,
     @InjectRepository(Workspace)
     private readonly workspaceRepository: Repository<Workspace>,
+    @InjectRepository(StatusTask)
+    private readonly statusTaskRepository: Repository<StatusTask>,
+
+    @InjectRepository(Status)
+    private readonly statusRepository: Repository<Status>,
     //@InjectRepository(User)
     //private readonly userRepository: Repository<User>,
   ) {}
@@ -44,15 +51,14 @@ export class ColumnService {
   }
 
   async findAll(id: number) {
-    const workspaceColumns = await this.workspaceColumnRepository.find({
+    return await this.statusRepository.find({
       where: {
-        workspace: {
+        project: {
           id,
         },
       },
       order: { position: 'ASC' },
     });
-    return workspaceColumns;
   }
 
   async findOneByColumnId(id: number) {

@@ -21,18 +21,22 @@ export class Workspace {
   @Column()
   name: string;
 
-  @ManyToMany(() => User, {cascade: true})
+  @ManyToMany(() => User, { cascade: true })
   users: User[];
 
-  @OneToMany(() => Task, (task) => task.workspace, { cascade: true })
-  @JoinTable()
-  tasks: Task[];
+  //@OneToMany(() => Task, (task) => task.workspace, { cascade: true })
+  //@JoinTable()
+  //tasks: Task[];
 
-  @OneToMany(() => Project, (project) => project.projectsTasks)
+  @OneToMany(() => Project, (project) => project.workspace)
   @JoinTable()
   projects: Project[];
 
-  @OneToMany(() => WorkspaceColumn, (workspaceColumn) => workspaceColumn.workspace, { cascade: true })
+  @OneToMany(
+    () => WorkspaceColumn,
+    (workspaceColumn) => workspaceColumn.workspace,
+    { cascade: true },
+  )
   @JoinTable()
   columns: WorkspaceColumn[];
 
